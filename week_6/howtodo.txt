@@ -1,0 +1,15 @@
+Step to run Jenkins new item
+
+1. Modify the code  "Add a new function" 
+2. Add a github repo and commit the code you update
+3. Update the pom with required depencencies (Junit) + JACOCo Plugin and check that all versions and plugins are ok.
+4. Add the unit test and check everything pass
+5. mvn clean install
+6. git--→ commit 
+7. Localhost:8080, add your jenkins credentials
+8. In jenkins select new Item--→ "Give a descriptive name" 
+9. Select free style -→ ok
+10. Select source code management--→git--→ add you github repo
+11. Select build Steps --→ invoke top-level maven targe -→ pick the maven alias you have set in my case i picked Maven3. double check yours through tools in manage Jenkins
+12. Select Add post-build action and pick the --→ Record JACOCO coverage report
+13. Build Now

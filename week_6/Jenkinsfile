@@ -1,0 +1,93 @@
+pipeline {
+    agent any
+
+    environment {
+        // Jenkins credentials (Username with password) holding your Docker Hub login/access token
+        DOCKERHUB_CREDENTIALS_ID = 'Docker_Hub'
+        // Docker Hub repository: <dockerhub-username>/<repo-name>
+        DOCKERHUB_REPO = 'mortargoblin/temperature-converter'
+        DOCKER_IMAGE_TAG = 'latest'
+        // The Maven project lives in this subdirectory of the repository
+        PROJECT_DIR = 'week_6'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'master', url: 'https://github.com/mortargoblin/otp_assignments.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                dir(env.PROJECT_DIR) {
+                    sh 'mvn clean install'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir(env.PROJECT_DIR) {
+                    sh 'mvn test'
+                }
+            }
+        }
+
+        stage('Code Coverage') {
+            steps {
+                dir(env.PROJECT_DIR) {
+                    sh 'mvn jacoco:report'
+                }
+            }
+        }
+
+        stage('Publish Test Results') {
+            steps {
+                junit "${env.PROJECT_DIR}/target/surefire-reports/*.xml"
+            }
+        }
+
+        stage('Publish Coverage Report') {
+            steps {
+                jacoco(
+                    execPattern: "${env.PROJECT_DIR}/target/jacoco.exec",
+                    classPattern: "${env.PROJECT_DIR}/target/classes",
+                    sourcePattern: "${env.PROJECT_DIR}/src/main/java"
+                )
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir(env.PROJECT_DIR) {
+                    sh "docker build -t ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Run Docker Image') {
+            steps {
+                sh "docker run --rm ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}"
+                sh "docker run --rm ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} 212 F"
+            }
+        }
+
+        stage('Push Docker Image to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CREDENTIALS_ID,
+                                                  usernameVariable: 'DOCKER_USER',
+                                                  passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+                    sh "docker push ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker logout || true'
+        }
+    }
+}

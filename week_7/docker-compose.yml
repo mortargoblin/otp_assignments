@@ -1,0 +1,27 @@
+# compose for conveniecne. easier local testing.
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: temperature_db
+      MARIADB_USER: temp_user
+      MARIADB_PASSWORD: temp_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+
+  app:
+    image: mortargoblin/temperature-converter-fx:latest
+    build: .
+    depends_on:
+      - db
+    environment:
+      DISPLAY: ${DISPLAY}
+      DB_URL: jdbc:mariadb://db:3306/temperature_db
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+
+volumes:
+  db-data:

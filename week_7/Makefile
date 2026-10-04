@@ -18,7 +18,9 @@ clean:
 db:
 	docker compose up -d db
 
-run: db
+# no db dependency: docker needs sudo, but the app must run as the desktop user
+# to reach the display. start the db first with `sudo make db`
+run:
 	mvn javafx:run
 
 docker-build:

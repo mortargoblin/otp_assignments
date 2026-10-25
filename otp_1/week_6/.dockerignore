@@ -1,0 +1,5 @@
+target/
+*.pdf
+Jenkinsfile
+Makefile
+howtodo.txt

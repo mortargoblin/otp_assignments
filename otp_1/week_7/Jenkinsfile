@@ -1,0 +1,56 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'master', url: 'https://github.com/mortargoblin/otp_assignments.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                dir('week_7') {
+                    sh 'mvn clean install'
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                dir('week_7') {
+                    sh 'mvn test'
+                }
+            }
+        }
+        stage('Code Coverage') {
+            steps {
+                dir('week_7') {
+                    sh 'mvn jacoco:report'
+                }
+            }
+        }
+        stage('Publish Test Results') {
+            steps {
+                junit '**/target/surefire-reports/*.xml'
+            }
+        }
+        stage('Publish Coverage Report') {
+            steps {
+                recordCoverage(tools: [[parser: 'JACOCO']])
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                dir('week_7') {
+                    sh 'docker build -t mortargoblin/temperature-converter-fx:latest .'
+                }
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'Docker_Hub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+                    sh 'docker push mortargoblin/temperature-converter-fx:latest'
+                }
+            }
+        }
+    }
+}

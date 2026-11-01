@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- every visible text is a %key looked up in MessagesBundle_xx_XX.properties -->
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.otp.temperature.MainController" spacing="12">
+  <padding>
+    <Insets top="16" right="16" bottom="16" left="16"/>
+  </padding>
+
+  <HBox spacing="12" alignment="CENTER_LEFT">
+    <ImageView fitHeight="64" preserveRatio="true">
+      <image>
+        <Image url="@../images/thermometer.png"/>
+      </image>
+    </ImageView>
+    <Label text="%app.title" style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Label text="%label.language"/>
+    <ComboBox fx:id="languageBox"/>
+  </HBox>
+
+  <HBox spacing="8" alignment="CENTER_LEFT">
+    <TextField fx:id="valueField" promptText="%prompt.value" prefColumnCount="8"/>
+    <ComboBox fx:id="fromBox"/>
+    <Label text="%label.to"/>
+    <ComboBox fx:id="toBox"/>
+    <Button text="%button.convert" defaultButton="true" onAction="#onConvert"/>
+  </HBox>
+
+  <Label fx:id="resultLabel" style="-fx-font-size: 16px;" wrapText="true"/>
+
+  <Label text="%label.history"/>
+  <TableView fx:id="historyTable" VBox.vgrow="ALWAYS">
+    <placeholder>
+      <Label text="%history.empty"/>
+    </placeholder>
+    <columns>
+      <TableColumn fx:id="timeColumn" text="%column.time" prefWidth="200"/>
+      <TableColumn fx:id="inputColumn" text="%column.input" prefWidth="200"/>
+      <TableColumn fx:id="resultColumn" text="%column.result" prefWidth="200"/>
+    </columns>
+  </TableView>
+
+  <HBox spacing="12" alignment="CENTER_LEFT">
+    <Button text="%button.clear" onAction="#onClearHistory"/>
+    <Label fx:id="statusLabel" wrapText="true"/>
+  </HBox>
+</VBox>

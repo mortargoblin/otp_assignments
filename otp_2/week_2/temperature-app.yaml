@@ -1,0 +1,81 @@
+# Kubernetes deployment for minikube:
+#   minikube start
+#   kubectl apply -f temperature-app.yaml
+#   kubectl get pods            (wait until both are Running)
+#   kubectl logs deployment/temperature-app
+#
+# The app is a GUI, so its window opens on an X server outside the cluster.
+# With Xming on Windows, start it with "-ac" (no access control) and keep
+# DISPLAY below at host.minikube.internal:0.0 (minikube's name for your machine).
+
+# MariaDB holding the temperature_unit and temp_record tables
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temperature-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: temperature-db
+  template:
+    metadata:
+      labels:
+        app: temperature-db
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:11
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              value: root
+            - name: MARIADB_DATABASE
+              value: temperature_db
+            - name: MARIADB_USER
+              value: temp_user
+            - name: MARIADB_PASSWORD
+              value: temp_pass
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: temperature-db
+spec:
+  selector:
+    app: temperature-db
+  ports:
+    - port: 3306
+      targetPort: 3306
+---
+# The JavaFX app from Docker Hub
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temperature-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: temperature-app
+  template:
+    metadata:
+      labels:
+        app: temperature-app
+    spec:
+      containers:
+        - name: temperature-app
+          image: mortargoblin/temperature-localization-fx:latest
+          imagePullPolicy: Always
+          env:
+            - name: DISPLAY
+              value: host.minikube.internal:0.0
+            - name: DB_URL
+              value: jdbc:mariadb://temperature-db:3306/temperature_db
+            - name: DB_USER
+              value: temp_user
+            - name: DB_PASSWORD
+              value: temp_pass
+            - name: DB_RETRIES
+              value: "12"
